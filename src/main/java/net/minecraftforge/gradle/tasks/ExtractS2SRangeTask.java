@@ -339,7 +339,7 @@ public class ExtractS2SRangeTask extends DefaultTask
         if (!task.getState().getExecuted())
         {
             getLogger().lifecycle(task.getPath());
-            task.execute();
+            throw new RuntimeException("TASK NOT EXEC!");
         }
     }
 

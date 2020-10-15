@@ -113,35 +113,35 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
         task.setGroup("ForgeGradle");
         //configureDecompSetup(task);
 
-        project.getGradle().getTaskGraph().whenReady(new Closure<Object>(this, null) {
-            @Override
-            public Object call()
-            {
-                TaskExecutionGraph graph = project.getGradle().getTaskGraph();
-                String path = project.getPath();
-                
-                graph.getAllTasks().clear();
-
-                if (graph.hasTask(path + "setupDecompWorkspace"))
-                {
-                    getExtension().setDecomp();
-                    configurePostDecomp(true, true);
-                }
-                return null;
-            }
-
-            @Override
-            public Object call(Object obj)
-            {
-                return call();
-            }
-
-            @Override
-            public Object call(Object... obj)
-            {
-                return call();
-            }
-        });
+//        project.getGradle().getTaskGraph().whenReady(new Closure<Object>(this, null) {
+//            @Override
+//            public Object call()
+//            {
+//                TaskExecutionGraph graph = project.getGradle().getTaskGraph();
+//                String path = project.getPath();
+//
+//                graph.getAllTasks().clear();
+//
+//                if (graph.hasTask(path + "setupDecompWorkspace"))
+//                {
+//                    getExtension().setDecomp();
+//                    configurePostDecomp(true, true);
+//                }
+//                return null;
+//            }
+//
+//            @Override
+//            public Object call(Object obj)
+//            {
+//                return call();
+//            }
+//
+//            @Override
+//            public Object call(Object... obj)
+//            {
+//                return call();
+//            }
+//        });
     }
 
     private boolean hasAppliedJson = false;
@@ -362,8 +362,7 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
         {
             args = Lists.newArrayList();
         }
-        args.add("-sourcepath");
-        args.add(".");
+        compileTask.getOptions().setSourcepath(project.files("."));
         compileTask.getOptions().setCompilerArgs(args);
     }
 
@@ -739,7 +738,7 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
             @Override
             public boolean isSatisfiedBy(Object obj)
             {
-                boolean didWork = ((Task) obj).dependsOnTaskDidWork();
+                boolean didWork = ((Task) obj).getDidWork();
                 boolean exists = recomp.call().exists();
                 if (!exists)
                     return true;
@@ -803,6 +802,16 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
         }
     }
 
+    private void delayedSetWorkingDir(JavaExec exec, final String value) {
+        exec.doFirst(new Action<Task>() {
+            @Override
+            public void execute(Task task) {
+                JavaExec javaExec = (JavaExec) task;
+                javaExec.workingDir(delayedFile(value));
+            }
+        });
+    }
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private void createExecTasks()
     {
@@ -812,7 +821,8 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
             exec.setMain(GRADLE_START_CLIENT);
             //exec.jvmArgs("-Xincgc", "-Xmx1024M", "-Xms1024M", "-Dfml.ignoreInvalidMinecraftCertificates=true");
             exec.args(getClientRunArgs());
-            exec.workingDir(delayedFile("{RUN_DIR}"));
+
+            delayedSetWorkingDir(exec, "{RUN_DIR}");
             exec.setStandardOutput(System.out);
             exec.setErrorOutput(System.err);
 
@@ -827,7 +837,8 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
             exec.doFirst(new MakeDirExist(delayedFile("{RUN_DIR}")));
             exec.setMain(GRADLE_START_SERVER);
             exec.jvmArgs("-Xincgc", "-Dfml.ignoreInvalidMinecraftCertificates=true");
-            exec.workingDir(delayedFile("{RUN_DIR}"));
+
+            delayedSetWorkingDir(exec, "{RUN_DIR}");
             exec.args(getServerRunArgs());
             exec.setStandardOutput(System.out);
             exec.setStandardInput(System.in);
@@ -858,7 +869,8 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
             exec.setMain(GRADLE_START_CLIENT);
             exec.jvmArgs("-Xincgc", "-Xmx1024M", "-Xms1024M", "-Dfml.ignoreInvalidMinecraftCertificates=true");
             exec.args(getClientRunArgs());
-            exec.workingDir(delayedFile("{RUN_DIR}"));
+
+            delayedSetWorkingDir(exec, "{RUN_DIR}");
             exec.setStandardOutput(System.out);
             exec.setErrorOutput(System.err);
             exec.setDebug(true);
@@ -887,7 +899,7 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
             });
             exec.setMain(GRADLE_START_SERVER);
             exec.jvmArgs("-Xincgc", "-Dfml.ignoreInvalidMinecraftCertificates=true");
-            exec.workingDir(delayedFile("{RUN_DIR}"));
+            delayedSetWorkingDir(exec, "{RUN_DIR}");
             exec.args(getServerRunArgs());
             exec.setStandardOutput(System.out);
             exec.setStandardInput(System.in);
@@ -1132,7 +1144,7 @@ public abstract class UserBasePlugin<T extends UserExtension> extends BasePlugin
             @Override
             public void execute(Object arg0)
             {
-                ((ScalaCompile) arg0).getScalaCompileOptions().setUseAnt(false);
+                ((ScalaCompile) arg0).getScalaCompileOptions();
             }
         });
     }
