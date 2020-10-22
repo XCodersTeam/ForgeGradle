@@ -438,6 +438,13 @@ public abstract class BasePlugin<K extends BaseExtension> implements Plugin<Proj
             {
                 repo.setName(name);
                 repo.setUrl(url);
+                repo.metadataSources(new Action<MavenArtifactRepository.MetadataSources>() {
+                    @Override
+                    public void execute(MavenArtifactRepository.MetadataSources metadataSources) {
+                        metadataSources.mavenPom();
+                        metadataSources.artifact();
+                    }
+                });
             }
         });
     }
