@@ -542,7 +542,7 @@ public class MinecraftUserRepo extends BaseRepo {
             return null;
         }
 
-        File recomp = findRecomp(mapping, false);
+        File recomp = findRecomp(mapping, true);
         if (recomp != null) {
             debug("  Finding Raw: Returning Recomp: " + recomp);
             return recomp;
